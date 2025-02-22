@@ -112,7 +112,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
   }
 
   // obtenir le solde d'un user
-  Future<double> getUserBalance(userId) async {
+ static Future<double> getUserBalance(userId) async {
     final db = await getDatabase();
     List<Map<String, dynamic>> result = await db.query(//le query noius permet de recuperer donc pour recuperer il faut le query
       "users",
