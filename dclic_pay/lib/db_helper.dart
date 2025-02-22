@@ -40,15 +40,16 @@ balance REAL DEFAULT 1000)
       await db.execute(
        ''' 
 
-CREATE TABLE USERS(
+CREATE TABLE  Transactions(
 id INTEGER PRIMARY KEY AUTOINCREMENT ,
 
  sender_id INTEGER  ,
  recipient_id INTEGER,
  amount REAL,
  date TEXT,
- FOREIGN KEY  (sender_id) REFERENCES users (id),
- FOREIGN KEY  (recipient_id) REFERENCES users (id),
+ is_sender INTEGER CHECK (is_sender IN(0,1)),
+ FOREIGN KEY  (user_id) REFERENCES users (id),
+ 
  )
 '''
       );
@@ -73,21 +74,45 @@ static Future <List<Map<String ,dynamic>>> getUsers()async{
   final db= await getDatabase();
   return db.query('users');
 }
-// ajouter une transaction
-static Future inserTransaction(int sender_id,int recipient_id,double amount)async{
+// ajouter une transaction en utlisant is_sender
+static Future <void>inserTransactions(int sender_id,int recipient_id,double amount)async{
 final db= await getDatabase();
-return db.insert('Transaction', 
+String currentDate = DateTime.now().toString();
+// ajouter une transaction pour un l'expediteur(is_sender =1)
+
+await db.insert('Transactions', 
 {
   "sender_id":sender_id,
   "recipient_id":recipient_id,
-  "amount":amount
+  "amount":amount,
+  "is_sender":1
 });
+await db.insert('Transactions', 
+{
+  "sender_id":sender_id,
+  "recipient_id":recipient_id,
+  "amount":amount,
+  "is_sender":0
+});
+// mettre ajour le solde de l'expediteur
+await db.rawUpdate(
+ "UPDATE users SET balance = balance -? WERE id =?",[amount,sender_id], 
+);
+//mettre a jour le solde du destinataire ou recipient
+await db.rawUpdate(
+ "UPDATE users SET balance = balance +? WERE id =?",[amount,sender_id], 
+); 
+
+
 }
+
+
 //obtenir toutes les transactions 
 static Future <List<Map<String,dynamic>>> getTransaction() async{
   final db= await getDatabase();
   return db.query('Transactions' ,orderBy: "date DESC");
 }
+
 
 
 
