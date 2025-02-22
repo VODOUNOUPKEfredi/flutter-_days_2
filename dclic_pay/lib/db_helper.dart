@@ -10,7 +10,7 @@ class DbHelper {
   static Future<Database> getDatabase() async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
-    return _database!;
+    return  await _database!;
   }
 
   // initialiser la base de donnees
@@ -57,7 +57,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
     double balance,
   ) async {
     final db = await getDatabase();
-    return db.insert('users', {
+    return  await db.insert('users', {
       "name": name,
       "email": email,
       "balance": balance,
@@ -67,7 +67,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
   //obtenir  tous les utilisateur
   static Future<List<Map<String, dynamic>>> getUsers() async {
     final db = await getDatabase();
-    return db.query('users');
+    return await  db.query('users');
   }
 
   // ajouter une transaction en utlisant is_sender
@@ -108,13 +108,13 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
   //obtenir toutes les transactions
   static Future<List<Map<String, dynamic>>> getTransaction() async {
     final db = await getDatabase();
-    return db.query('Transactions', orderBy: "date DESC");
+    return  await db.query('Transactions', orderBy: "date DESC");
   }
 
   // obtenir le solde d'un user
   Future<double> getUserBalance(userId) async {
     final db = await getDatabase();
-    List<Map<String, dynamic>> result = await db.query(
+    List<Map<String, dynamic>> result = await db.query(//le query noius permet de recuperer donc pour recuperer il faut le query
       "users",
       columns: ["balance"],
       where: "id =?",
