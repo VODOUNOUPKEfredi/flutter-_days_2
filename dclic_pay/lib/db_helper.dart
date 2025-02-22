@@ -71,6 +71,16 @@ static Future<List<Map<String ,dynamic>>> getUsers()async{
   final db= await getDatabase();
   return db.query('users');
 }
+// ajouter une transaction
+static Future inserTransaction(int sender_id,int recipient_id,double amount)async{
+final db= await getDatabase();
+return db.insert('Transaction', 
+{
+  "sender_id":sender_id,
+  "recipient_id":recipient_id,
+  "amount":amount
+});
+}
 
 
 
