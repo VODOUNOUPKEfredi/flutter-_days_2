@@ -1,3 +1,5 @@
+import 'dart:core';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/sqlite_api.dart';
 import 'package:path/path.dart';
@@ -67,7 +69,7 @@ static Future<int> inserUser(String name ,String email, double balance) async{
   
 }
 //obtenir  tous les utilisateur
-static Future<List<Map<String ,dynamic>>> getUsers()async{
+static Future <List<Map<String ,dynamic>>> getUsers()async{
   final db= await getDatabase();
   return db.query('users');
 }
@@ -81,7 +83,11 @@ return db.insert('Transaction',
   "amount":amount
 });
 }
-
+//obtenir toutes les transactions 
+static Future <List<Map<String,dynamic>>> getTransaction() async{
+  final db= await getDatabase();
+  return db.query('Transactions' ,orderBy: "date DESC");
+}
 
 
 
