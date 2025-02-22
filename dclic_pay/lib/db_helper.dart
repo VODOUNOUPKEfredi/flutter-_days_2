@@ -54,11 +54,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
     
   );
 }
-//inserer  permettant d'inserer une task un bool mais avec 1 et 0 ,  1 pour tout c'est bien passer 0 pour le contraire
-static Future <int > inser(String task)async{
-  final db= await getDatabase();
- return db.insert('todo', {'task':task ,'done':0});
-}
+
 // inserer un user
 static Future<int> inserUser(String name ,String email, double balance) async{
   final db = await getDatabase();
@@ -67,8 +63,15 @@ static Future<int> inserUser(String name ,String email, double balance) async{
     "email":email,
     "balance":balance
   });
-  //obtenir 
+  
+  
 }
+//obtenir  tous les utilisateur
+static Future<List<Map<String ,dynamic>>> getUsers()async{
+  final db= await getDatabase();
+  return db.query('users');
+}
+
 
 
 
