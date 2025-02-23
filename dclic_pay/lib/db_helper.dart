@@ -1,143 +1,134 @@
 import 'dart:core';
-
-import 'package:dclic_pay/user.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:sqflite/sqlite_api.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqlite_api.dart';
+import 'package:dclic_pay/user.dart';
 
 class DbHelper {
-  static late Database? _database;
-  //recuperer la base de donnees
+  static Database? _database;
+
+  // ✅ Initialisation de la base de données
   static Future<Database> getDatabase() async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return  await _database!;
+    if (_database == null) {
+      _database = await _initDatabase();
+    }
+    return _database!;
   }
 
-  // initialiser la base de donnees
+  // ✅ Configuration et création de la base de données
   static Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath());
-    return await openDatabase(
-      path,
+    sqfliteFfiInit(); // ✅ Initialise l'environnement FFI
+    databaseFactory = databaseFactoryFfi; // ✅ Active la factory pour SQLite FFI
+
+    String path = join(await getDatabasesPath(), 'dclic_pay.db');
+    return await databaseFactory.openDatabase(path, options: OpenDatabaseOptions(
       version: 1,
       onCreate: (db, version) async {
-        await db.execute(
-          'CREATE TABLE todo (id INTEGER PRIMARY KEY, task TEXT, done INTEGER)',
-        );
-        //creation de la table user
+        // Création de la table USERS
         await db.execute('''
-CREATE TABLE USERS(
-id INTEGER PRIMARY KEY AUTOINCREMENT , 
-name TEXT UNIQUE ,
-balance REAL DEFAULT 1000)
+          CREATE TABLE users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
+            name TEXT UNIQUE,
+            email TEXT UNIQUE,
+            balance REAL DEFAULT 1000
+          )
+        ''');
 
-''');
-
-        await db.execute(''' 
-
-CREATE TABLE  Transactions(
-id INTEGER PRIMARY KEY AUTOINCREMENT ,
-
- sender_id INTEGER  ,
- recipient_id INTEGER,
- amount REAL,
- date TEXT,
- is_sender INTEGER CHECK (is_sender IN(0,1)),
- FOREIGN KEY  (user_id) REFERENCES users (id),
- 
- )
-''');
+        // Création de la table TRANSACTIONS
+        await db.execute('''
+          CREATE TABLE transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sender_id INTEGER,
+            recipient_id INTEGER,
+            amount REAL,
+            date TEXT,
+            is_sender INTEGER CHECK (is_sender IN (0,1)),
+            FOREIGN KEY (sender_id) REFERENCES users(id),
+            FOREIGN KEY (recipient_id) REFERENCES users(id)
+          )
+        ''');
       },
-    );
+    ));
   }
 
-  // inserer un user
-  static Future<int> insertUser(
-    String name,
-    String email,
-    double balance,
-  ) async {
+  // ✅ Ajouter un utilisateur
+  static Future<int> insertUser(String name, String email, double balance) async {
     final db = await getDatabase();
-    return  await db.insert('users', {
+    return await db.insert('users', {
       "name": name,
       "email": email,
       "balance": balance,
     });
   }
 
-  //obtenir  tous les utilisateur
+  // ✅ Obtenir tous les utilisateurs
   static Future<List<Map<String, dynamic>>> getUsers() async {
     final db = await getDatabase();
-    return await  db.query('users');
+    return await db.query('users');
   }
-  
-// obtenir un user par email
-static Future <User?> getUserByEmail( String email)async{
-final db= await DbHelper._database;
-List<Map<String,dynamic>>result=await db!.query(
-  'Users',
-  where: 'email=?',
-  whereArgs: [email]
-);
-if(result.isNotEmpty){
-  return User.fromMap(result.first);
-}
-return null;
 
-}
-  // ajouter une transaction en utlisant is_sender
-  static Future<void> insertTransactions(
-    int sender_id,
-    int recipient_id,
-    double amount,
-  ) async {
+  // ✅ Obtenir un utilisateur par email
+  static Future<User?> getUserByEmail(String email) async {
     final db = await getDatabase();
-    String currentDate = DateTime.now().toString();
-    // ajouter une transaction pour un l'expediteur(is_sender =1)
+    List<Map<String, dynamic>> result = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    if (result.isNotEmpty) {
+      return User.fromMap(result.first);
+    }
+    return null;
+  }
 
-    await db.insert('Transactions', {
-      "user_id": sender_id,
+  // ✅ Ajouter une transaction
+  static Future<void> insertTransaction(int senderId, int recipientId, double amount) async {
+    final db = await getDatabase();
+    String currentDate = DateTime.now().toIso8601String();
 
+    // Transaction pour l'expéditeur
+    await db.insert('transactions', {
+      "sender_id": senderId,
+      "recipient_id": recipientId,
       "amount": amount,
       "date": currentDate,
       "is_sender": 1,
     });
-    await db.insert('Transactions', {
-      "user_id": sender_id,
-      "date": currentDate,
+
+    // Transaction pour le destinataire
+    await db.insert('transactions', {
+      "sender_id": senderId,
+      "recipient_id": recipientId,
       "amount": amount,
+      "date": currentDate,
       "is_sender": 0,
     });
-    // mettre ajour le solde de l'expediteur
-    await db.rawUpdate("UPDATE users SET balance = balance -? WERE id =?", [
-      amount,
-      sender_id,
-    ]);
-    //mettre a jour le solde du destinataire otableu recipient
-    await db.rawUpdate("UPDATE users SET balance = balance +? WERE id =?", [
-      amount,
-      recipient_id,
-    ]);
+
+    // Mettre à jour le solde de l'expéditeur
+    await db.rawUpdate("UPDATE users SET balance = balance - ? WHERE id = ?", [amount, senderId]);
+
+    // Mettre à jour le solde du destinataire
+    await db.rawUpdate("UPDATE users SET balance = balance + ? WHERE id = ?", [amount, recipientId]);
   }
 
-  //obtenir toutes les transactions
-  static Future<List<Map<String, dynamic>>> getTransaction() async {
+  // ✅ Obtenir toutes les transactions
+  static Future<List<Map<String, dynamic>>> getTransactions() async {
     final db = await getDatabase();
-    return  await db.query('Transactions', orderBy: "date DESC");
+    return await db.query('transactions', orderBy: "date DESC");
   }
 
-  // obtenir le solde d'un user
- static Future<double> getUserBalance(userId) async {
+  // ✅ Obtenir le solde d'un utilisateur
+  static Future<double> getUserBalance(int userId) async {
     final db = await getDatabase();
-    List<Map<String, dynamic>> result = await db.query(//le query noius permet de recuperer donc pour recuperer il faut le query
+    List<Map<String, dynamic>> result = await db.query(
       "users",
       columns: ["balance"],
-      where: "id =?",
+      where: "id = ?",
       whereArgs: [userId],
     );
     if (result.isNotEmpty) {
       return result.first["balance"] as double;
     }
-    return 0.0; // 0.0 es une valeur pas defaut qui sera renvoyer a la place de null pour eviter une erreur au cas ou l'utlisateur serais pas trouvé
+    return 0.0;
   }
 }

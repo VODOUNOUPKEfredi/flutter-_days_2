@@ -1,8 +1,24 @@
-import 'package:flutter/material.dart';
-import 'package:dclic_pay/sendPage.dart'; // Assurez-vous d'importer la page d'envoi d'argent
 
-class HomePage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:dclic_pay/sendPage.dart'; 
+import 'package:dclic_pay/db_helper.dart';
+
+
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late Future<List<Map<String, dynamic>>> transactions;
+
+  @override
+  void initState() {
+    super.initState();
+    transactions = DbHelper.getTransactions(); // Charger les transactions depuis SQLite
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,37 +34,44 @@ class HomePage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Solde principal
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "Sacof account",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "\$6,190.00",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+          Card(
+            elevation: 15,
+            color: Colors.blue,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Fredi account", style: TextStyle(color: Colors.white)),
+                      Text("Arian zesan", style: TextStyle(color: Colors.white)),
+                    ],
                   ),
-                ),
-                Text(
-                  "Total balance",
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
+                  SizedBox(height: 30),
+                  Center(
+                    child: Text(
+                      "\$6,190.00", // Remplace par le vrai solde SQLite si nécessaire
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                  SizedBox(),
+                  Center(
+                    child: Text("Total balance", style: TextStyle(fontWeight: FontWeight.w400, color: Colors.white, fontSize: 10)),
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Added cart 05", style: TextStyle(color: Colors.white)),
+                      Text("Ac no 2234521", style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
+          SizedBox(height: 10),
           // Boutons d'actions
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -57,44 +80,77 @@ class HomePage extends StatelessWidget {
                 icon: Icons.send,
                 label: "Envoyer",
                 onTap: () {
-                  // Navigation vers la page d'envoi d'argent
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SendPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SendPage()));
                 },
               ),
               _actionButton(
                 icon: Icons.download,
                 label: "Recevoir",
-                onTap: () {
-                  // Logique pour recevoir de l'argent
-                },
+                onTap: () {},
               ),
               _actionButton(
                 icon: Icons.card_giftcard,
                 label: "Récompenses",
-                onTap: () {
-                  // Logique pour les récompenses
-                },
+                onTap: () {},
               ),
             ],
           ),
           const SizedBox(height: 16),
-          // Activité récente
+          
+          // Liste des transactions avec ListView.builder
           Expanded(
-            child: ListView(
-              children: [
-                _transactionTile("Miradie", "+1,190.00", Colors.green),
-                _transactionTile("Emeric", "-75.00", Colors.red),
-                _transactionTile("Nelly", "-220.00", Colors.red),
-                _transactionTile("Silas", "+2,000.00", Colors.green),
-              ],
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: transactions,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator()); // Loader en attendant les données
+                } else if (snapshot.hasError) {
+                  return Center(child: Text("Erreur : ${snapshot.error}"));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text("Aucune transaction trouvée"));
+                } else {
+                  return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      final transaction = snapshot.data![index];
+                      bool isReceived = transaction['amount'] > 0; // Déterminer si c'est un envoi ou une réception
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => SendPage()));
+                        },
+                        child: Card(
+                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 3,
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: isReceived ? Colors.green : Colors.red,
+                              child: Icon(
+                                isReceived ? Icons.arrow_downward : Icons.arrow_upward,
+                                color: Colors.white,
+                              ),
+                            ),
+                            title: Text(transaction['sender'], style: TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text(transaction['date']),
+                            trailing: Text(
+                              "${transaction['amount']} F CFA",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isReceived ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              },
             ),
           ),
         ],
       ),
-     
     );
   }
 
@@ -111,21 +167,6 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(label),
         ],
-      ),
-    );
-  }
-
-  Widget _transactionTile(String name, String amount, Color color) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Colors.grey[300],
-        child: const Icon(Icons.person, color: Colors.black),
-      ),
-      title: Text(name),
-      subtitle: const Text("22 Jan 2025"),
-      trailing: Text(
-        amount,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }

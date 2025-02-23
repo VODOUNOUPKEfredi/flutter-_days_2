@@ -62,8 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
           Center(
             child: CreditCardUi(
               width: 300,
-              cardHolderFullName: 'Ulrich MIDJINDOU',
-              cardNumber: '1234567812345678',
+              cardHolderFullName: 'fredi',
+              cardNumber: '12345588123452584',
               validFrom: '01/23',
               validThru: '01/28',
               topLeftColor: Colors.blue,
@@ -73,10 +73,10 @@ class _MyHomePageState extends State<MyHomePage> {
               cardProviderLogo: const FlutterLogo(),
               cardProviderLogoPosition: CardProviderLogoPosition.right,
               showBalance: true,
-              balance: 128.32,
+              balance: 200.32,
               autoHideBalance: true,
               enableFlipping: true,
-              cvvNumber: '123',
+              cvvNumber: '124',
             ),
           ),
           const SizedBox(height: 20),

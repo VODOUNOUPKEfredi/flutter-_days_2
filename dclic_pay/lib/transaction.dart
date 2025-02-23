@@ -16,6 +16,7 @@ class Transaction {
   });
   // convertir un Map pour l'insertion dans SQlite
   static Map<String, dynamic> toMap(id, sender, recipient, amount, date) {
+
     return {
       "id": id,
       "sender": sender,
@@ -26,14 +27,17 @@ class Transaction {
   }
 
   //convertir un Map sqlite en Transaction
-  static Transaction fromMap(Map<String, dynamic> map) {
+  factory Transaction .fromMap(Map<String, dynamic> map) {
     return Transaction(
-      sender: map["sender"],
-      recipient: map["recipient"],
-      amount: map["amount"],
-      date: map["date"],
+      sender: map["sender"] as String,
+      recipient: map["recipient"] as String,
+      amount: map["amount"] as double,
+      date: map["date"] ,
+      
     );
+    
   }
+
 
   // // ajouter une transaction
   // static Future<void> inserTransaction({

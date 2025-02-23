@@ -58,7 +58,7 @@ class _SendScreenState extends State<SendPage> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundImage: AssetImage('assets/images/avatar.png'),
+              backgroundImage: AssetImage('images/1.png'),
             ),
             SizedBox(width: 10),
             Text(
