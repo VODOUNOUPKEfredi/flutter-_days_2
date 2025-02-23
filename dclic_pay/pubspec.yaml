@@ -37,6 +37,10 @@ dependencies:
   sqflite: ^2.4.2
   path_provider: ^2.1.5
   path: ^1.9.1
+  fl_chart: ^0.70.2
+  u_credit_card: ^1.4.0
+  sliding_clipped_nav_bar: ^3.1.1
+  font_awesome_flutter: ^10.8.0
 
 dev_dependencies:
   flutter_test:

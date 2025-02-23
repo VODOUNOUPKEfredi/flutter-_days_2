@@ -1,11 +1,12 @@
 import 'dart:core';
 
+import 'package:dclic_pay/user.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/sqlite_api.dart';
 import 'package:path/path.dart';
 
 class DbHelper {
-  static Database? _database;
+  static late Database? _database;
   //recuperer la base de donnees
   static Future<Database> getDatabase() async {
     if (_database != null) return _database!;
@@ -51,7 +52,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
   }
 
   // inserer un user
-  static Future<int> inserUser(
+  static Future<int> insertUser(
     String name,
     String email,
     double balance,
@@ -69,9 +70,23 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
     final db = await getDatabase();
     return await  db.query('users');
   }
+  
+// obtenir un user par email
+static Future <User?> getUserByEmail( String email)async{
+final db= await DbHelper._database;
+List<Map<String,dynamic>>result=await db!.query(
+  'Users',
+  where: 'email=?',
+  whereArgs: [email]
+);
+if(result.isNotEmpty){
+  return User.fromMap(result.first);
+}
+return null;
 
+}
   // ajouter une transaction en utlisant is_sender
-  static Future<void> inserTransactions(
+  static Future<void> insertTransactions(
     int sender_id,
     int recipient_id,
     double amount,
@@ -98,7 +113,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT ,
       amount,
       sender_id,
     ]);
-    //mettre a jour le solde du destinataire ou recipient
+    //mettre a jour le solde du destinataire otableu recipient
     await db.rawUpdate("UPDATE users SET balance = balance +? WERE id =?", [
       amount,
       recipient_id,

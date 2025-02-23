@@ -1,77 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:dclic_pay/homescreen.dart';
+import 'package:dclic_pay/walletscreen.dart';
+import 'package:dclic_pay/profilescreen.dart';
+
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Gestion des Transactions',
       theme: ThemeData(
-        
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MainPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-
-  final String title;
+class MainPage extends StatefulWidget {
+  const MainPage({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MainPageState createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MainPageState extends State<MainPage> {
+  int _selectedIndex = 0;
 
-  
-  int _counter = 0;
+  static final List<Widget> _pages = <Widget>[
+    HomePage(),
+     WalletScreen(),
+   ProfileScreen(),
+  ];
 
-  void _incrementCounter() {
+  void _onItemTapped(int index) {
     setState(() {
-      
-      _counter++;
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-   
     return Scaffold(
       appBar: AppBar(
-        
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        
-        title: Text(widget.title),
+        title: const Text('Gestion des Transactions'),
       ),
-      body: Center(
-        
-        child: Column(
-          
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_wallet),
+            label: 'Portefeuille',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Profil',
+          ),
+        ],
       ),
     );
   }
