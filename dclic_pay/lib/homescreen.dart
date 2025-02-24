@@ -1,8 +1,7 @@
-
 import 'package:flutter/material.dart';
-import 'package:dclic_pay/sendPage.dart'; 
-import 'package:dclic_pay/db_helper.dart';
-
+import 'package:dclic_pay/db_helper.dart'; // Assure-toi d'importer correctement ton DbHelper
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:dclic_pay/sendPage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -12,28 +11,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<List<Map<String, dynamic>>> transactions;
-
-  @override
-  void initState() {
-    super.initState();
-    transactions = DbHelper.getTransactions(); // Charger les transactions depuis SQLite
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Hello Sacof!"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text("Historique des Transactions")),
       body: Column(
         children: [
+          // Ajouter ici tous les autres widgets (comme la carte, les boutons, etc.)
           Card(
             elevation: 15,
             color: Colors.blue,
@@ -44,27 +29,50 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Fredi account", style: TextStyle(color: Colors.white)),
-                      Text("Arian zesan", style: TextStyle(color: Colors.white)),
+                      Text(
+                        "Fredi account",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        "Arian zesan",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ],
                   ),
                   SizedBox(height: 30),
                   Center(
                     child: Text(
                       "\$6,190.00", // Remplace par le vrai solde SQLite si nécessaire
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 24),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
                     ),
                   ),
                   SizedBox(),
                   Center(
-                    child: Text("Total balance", style: TextStyle(fontWeight: FontWeight.w400, color: Colors.white, fontSize: 10)),
+                    child: Text(
+                      "Total balance",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                        fontSize: 10,
+                      ),
+                    ),
                   ),
                   SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Added cart 05", style: TextStyle(color: Colors.white)),
-                      Text("Ac no 2234521", style: TextStyle(color: Colors.white)),
+                      Text(
+                        "Added cart 05",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        "Ac no 2234521",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ],
                   ),
                 ],
@@ -73,101 +81,121 @@ class _HomePageState extends State<HomePage> {
           ),
           SizedBox(height: 10),
           // Boutons d'actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _actionButton(
-                icon: Icons.send,
-                label: "Envoyer",
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SendPage()));
-                },
-              ),
-              _actionButton(
-                icon: Icons.download,
-                label: "Recevoir",
-                onTap: () {},
-              ),
-              _actionButton(
-                icon: Icons.card_giftcard,
-                label: "Récompenses",
-                onTap: () {},
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text("Facture"), Text("See more")],
+                ),
+
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SendPage()),
+                        );
+                      },
+                      icon: FaIcon(FontAwesomeIcons.moneyBill),
+                      label: Text("Send"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.withAlpha(50),
+                      ),
+                    ),
+                     ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SendPage()),
+                        );
+                      },
+                      icon: FaIcon(FontAwesomeIcons.moneyBill),
+                      label: Text("Receive"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.withAlpha(50),
+                      ),
+                    ),
+                     ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SendPage()),
+                        );
+                      },
+                      icon: FaIcon(FontAwesomeIcons.moneyBill),
+                      label: Text("Reward"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.withAlpha(50),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text("Recent activity"), Text("All")],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          
-          // Liste des transactions avec ListView.builder
+          // Utilisation de FutureBuilder pour attendre la récupération des transactions
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: transactions,
+              future:
+                  DbHelper.getTransactions(), // Appeler la méthode pour récupérer les transactions
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator()); // Loader en attendant les données
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Erreur : ${snapshot.error}"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text("Aucune transaction trouvée"));
-                } else {
-                  return ListView.builder(
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      final transaction = snapshot.data![index];
-                      bool isReceived = transaction['amount'] > 0; // Déterminer si c'est un envoi ou une réception
-
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => SendPage()));
-                        },
-                        child: Card(
-                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 3,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: isReceived ? Colors.green : Colors.red,
-                              child: Icon(
-                                isReceived ? Icons.arrow_downward : Icons.arrow_upward,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: Text(transaction['sender'], style: TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text(transaction['date']),
-                            trailing: Text(
-                              "${transaction['amount']} F CFA",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: isReceived ? Colors.green : Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  ); // Afficher un indicateur de chargement pendant la récupération
                 }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text("Erreur: ${snapshot.error}"));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text("Aucune transaction"));
+                }
+
+                // Récupérer les transactions récupérées
+                List<Map<String, dynamic>> transactions = snapshot.data!;
+
+                return ListView.builder(
+                  itemCount:
+                      transactions
+                          .length, // Utiliser le nombre d'éléments dans transactions
+                  itemBuilder: (context, index) {
+                    var transaction =
+                        transactions[index]; // Récupérer la transaction
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey[300],
+                        child: Icon(Icons.person, color: Colors.black),
+                      ),
+                      title: Text(
+                        "Sender: ${transaction['sender_id']}",
+                      ), // Afficher l'expéditeur
+                      subtitle: Text(
+                        "Recipient: ${transaction['recipient_id']}",
+                      ), // Afficher le destinataire
+                      trailing: Text(
+                        "\$${transaction['amount']}",
+                      ), // Afficher le montant
+                    );
+                  },
+                );
               },
             ),
           ),
         ],
       ),
-    );
-  }
 
-  Widget _actionButton({required IconData icon, required String label, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.grey[200],
-            radius: 24,
-            child: Icon(icon, color: Colors.black),
-          ),
-          const SizedBox(height: 8),
-          Text(label),
-        ],
-      ),
+      // Section qui charge et affiche les transactions
     );
   }
 }

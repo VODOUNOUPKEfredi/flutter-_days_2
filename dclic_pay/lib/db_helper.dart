@@ -131,4 +131,6 @@ class DbHelper {
     }
     return 0.0;
   }
+
+  static getTransaction() {}
 }
