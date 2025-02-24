@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-
+import 'package:dclic_pay/transaction.dart';
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String phoneNumber = "+229 97 00 00 00";
-  String balance = "\$3,250.00";
+  String phoneNumber = "+229 98 00 00 00";
+  String balance = "10000";
   String paymentMethod = "Carte Visa **** 1234";
-  bool is2FAEnabled = true;
+  
 
   void _editField(String title, String currentValue, Function(String) onSave) {
     TextEditingController controller = TextEditingController(text: currentValue);
@@ -61,9 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundImage: AssetImage('images/1.png'),
             ),
             SizedBox(height: 16),
-            Text('John Doe', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('frediv', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('johndoe@example.com', style: TextStyle(color: Colors.grey)),
+            Text('fredi@example.com', style: TextStyle(color: Colors.grey)),
             SizedBox(height: 16),
             Divider(),
 
@@ -71,7 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               setState(() => phoneNumber = newValue);
             }),
 
-            _buildProfileOption(Icons.account_balance_wallet, 'Solde', balance, (newValue) {
+            _buildProfileOption(Icons.account_balance_wallet, 'Solde',balance, (newValue) {
               setState(() => balance = newValue);
             }),
 
@@ -79,20 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               setState(() => paymentMethod = newValue);
             }),
 
-            ListTile(
-              leading: Icon(Icons.security, color: Colors.blue),
-              title: Text('2FA', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(is2FAEnabled ? "Activé" : "Désactivé"),
-              trailing: Switch(
-                value: is2FAEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    is2FAEnabled = value;
-                  });
-                },
-              ),
-            ),
-
+           
             SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {

@@ -17,7 +17,7 @@ class _SendScreenState extends State<SendPage> {
   final TextEditingController recipientController = TextEditingController();
   String? recipientError;
 
-  void _sendTransaction() {
+ void insertTransaction() {
     String recipient = recipientController.text.trim();
 
     if (recipient.isEmpty) {
@@ -175,7 +175,7 @@ class _SendScreenState extends State<SendPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: isAgreed ? _sendTransaction : null,
+                  onPressed: isAgreed ? insertTransaction : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isAgreed ? Colors.blue : Colors.grey,
                     padding: EdgeInsets.symmetric(vertical: 14),

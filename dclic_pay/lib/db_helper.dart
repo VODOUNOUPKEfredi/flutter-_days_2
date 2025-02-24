@@ -9,16 +9,14 @@ class DbHelper {
 
   // ✅ Initialisation de la base de données
   static Future<Database> getDatabase() async {
-    if (_database == null) {
-      _database = await _initDatabase();
-    }
+    _database ??= await _initDatabase();
     return _database!;
   }
 
-  // ✅ Configuration et création de la base de données
+  //  Configuration et création de la base de données
   static Future<Database> _initDatabase() async {
-    sqfliteFfiInit(); // ✅ Initialise l'environnement FFI
-    databaseFactory = databaseFactoryFfi; // ✅ Active la factory pour SQLite FFI
+    sqfliteFfiInit(); //  Initialise l'environnement FFI
+    databaseFactory = databaseFactoryFfi; //  Active la factory pour SQLite FFI
 
     String path = join(await getDatabasesPath(), 'dclic_pay.db');
     return await databaseFactory.openDatabase(path, options: OpenDatabaseOptions(
@@ -51,7 +49,7 @@ class DbHelper {
     ));
   }
 
-  // ✅ Ajouter un utilisateur
+  //  Ajouter un utilisateur
   static Future<int> insertUser(String name, String email, double balance) async {
     final db = await getDatabase();
     return await db.insert('users', {
@@ -61,13 +59,13 @@ class DbHelper {
     });
   }
 
-  // ✅ Obtenir tous les utilisateurs
+  // Obtenir tous les utilisateurs
   static Future<List<Map<String, dynamic>>> getUsers() async {
     final db = await getDatabase();
     return await db.query('users');
   }
 
-  // ✅ Obtenir un utilisateur par email
+  //  Obtenir un utilisateur par email
   static Future<User?> getUserByEmail(String email) async {
     final db = await getDatabase();
     List<Map<String, dynamic>> result = await db.query(
@@ -81,7 +79,7 @@ class DbHelper {
     return null;
   }
 
-  // ✅ Ajouter une transaction
+  //  Ajouter une transaction
   static Future<void> insertTransaction(int senderId, int recipientId, double amount) async {
     final db = await getDatabase();
     String currentDate = DateTime.now().toIso8601String();
@@ -111,13 +109,13 @@ class DbHelper {
     await db.rawUpdate("UPDATE users SET balance = balance + ? WHERE id = ?", [amount, recipientId]);
   }
 
-  // ✅ Obtenir toutes les transactions
+  //  Obtenir toutes les transactions
   static Future<List<Map<String, dynamic>>> getTransactions() async {
     final db = await getDatabase();
     return await db.query('transactions', orderBy: "date DESC");
   }
 
-  // ✅ Obtenir le solde d'un utilisateur
+  //  Obtenir le solde d'un utilisateur
   static Future<double> getUserBalance(int userId) async {
     final db = await getDatabase();
     List<Map<String, dynamic>> result = await db.query(
@@ -132,5 +130,5 @@ class DbHelper {
     return 0.0;
   }
 
-  static getTransaction() {}
+  //static getTransaction() {}
 }

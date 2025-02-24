@@ -1,24 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:dclic_pay/db_helper.dart'; // Assure-toi d'importer correctement ton DbHelper
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:dclic_pay/sendPage.dart';
+import 'package:dclic_pay/sendPage.dart'; // Assurez-vous que cette page existe
+import 'db_helper.dart'; // Importation de la classe DbHelper
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  
+  List<Map<String, dynamic>> transactions = [];
+  final DbHelper dbHelper = DbHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+  }
+
+  Future<void> _loadTransactions() async {
+    final data =
+        await DbHelper.getTransactions(); // Récupération des transactions depuis SQLite
+    print("-----------------data");
+    print(data);
+    print(DbHelper);
+    setState(() {
+      transactions = data;
+      print(transactions);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Historique des Transactions")),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundImage: AssetImage('images/1.png'),
+            ),
+            SizedBox(width: 10),
+            Text(
+              "Hello fredi !",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          // Ajouter ici tous les autres widgets (comme la carte, les boutons, etc.)
           Card(
             elevation: 15,
             color: Colors.blue,
@@ -42,7 +84,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 30),
                   Center(
                     child: Text(
-                      "\$6,190.00", // Remplace par le vrai solde SQLite si nécessaire
+                      "\$10000.00",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -79,123 +121,55 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          SizedBox(height: 10),
-          // Boutons d'actions
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Facture"), Text("See more")],
-                ),
-
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SendPage()),
-                        );
-                      },
-                      icon: FaIcon(FontAwesomeIcons.moneyBill),
-                      label: Text("Send"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.withAlpha(50),
-                      ),
-                    ),
-                     ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SendPage()),
-                        );
-                      },
-                      icon: FaIcon(FontAwesomeIcons.moneyBill),
-                      label: Text("Receive"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.withAlpha(50),
-                      ),
-                    ),
-                     ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SendPage()),
-                        );
-                      },
-                      icon: FaIcon(FontAwesomeIcons.moneyBill),
-                      label: Text("Reward"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.withAlpha(50),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Recent activity"), Text("All")],
-                ),
-              ],
-            ),
+          SizedBox(height: 25),
+           Padding(
+            padding: EdgeInsets.all(20),
+            child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Features",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+              Text("See all",style: TextStyle(fontSize: 15,fontWeight: FontWeight.w300),)
+            ],
           ),
-          // Utilisation de FutureBuilder pour attendre la récupération des transactions
+            ),
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SendPage()),
+                  );
+                },
+                child: Text("Send"),
+              ),
+              ElevatedButton(onPressed: () {}, child: Text("Receive")),
+            ],
+          ),
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future:
-                  DbHelper.getTransactions(), // Appeler la méthode pour récupérer les transactions
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  ); // Afficher un indicateur de chargement pendant la récupération
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text("Erreur: ${snapshot.error}"));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text("Aucune transaction"));
-                }
-
-                // Récupérer les transactions récupérées
-                List<Map<String, dynamic>> transactions = snapshot.data!;
-
-                return ListView.builder(
-                  itemCount:
-                      transactions
-                          .length, // Utiliser le nombre d'éléments dans transactions
-                  itemBuilder: (context, index) {
-                    var transaction =
-                        transactions[index]; // Récupérer la transaction
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.grey[300],
-                        child: Icon(Icons.person, color: Colors.black),
-                      ),
-                      title: Text(
-                        "Sender: ${transaction['sender_id']}",
-                      ), // Afficher l'expéditeur
-                      subtitle: Text(
-                        "Recipient: ${transaction['recipient_id']}",
-                      ), // Afficher le destinataire
-                      trailing: Text(
-                        "\$${transaction['amount']}",
-                      ), // Afficher le montant
-                    );
-                  },
+            child: ListView.builder(
+              itemCount: transactions.length,
+              itemBuilder: (context, index) {
+                final transaction = transactions[index];
+                return ListTile(
+                  leading: CircleAvatar(child: Text(transaction['name'][0])),
+                  title: Text(transaction['name']),
+                  subtitle: Text(transaction['date']),
+                  trailing: Text(
+                    "${transaction['amount'] > 0 ? '+' : ''}\$${transaction['amount'].toStringAsFixed(2)}",
+                    style: TextStyle(
+                      color:
+                          transaction['amount'] > 0 ? Colors.green : Colors.red,
+                    ),
+                  ),
                 );
               },
             ),
           ),
         ],
       ),
-
-      // Section qui charge et affiche les transactions
     );
   }
 }
