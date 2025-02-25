@@ -22,7 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
       String password = passwordController.text.trim();
 
       // Vérifier si l'utilisateur existe
-      User? existingUser = await DbHelper.getUserByEmail(email);
+      Map<String, dynamic>? existingUser = await DbHelper.getUserByEmail(email);
       if (existingUser != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("L'email existe déjà")),

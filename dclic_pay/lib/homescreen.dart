@@ -1,6 +1,28 @@
+
+import 'package:dclic_pay/sendPage.dart';
 import 'package:flutter/material.dart';
-import 'package:dclic_pay/sendPage.dart'; // Assurez-vous que cette page existe
-import 'db_helper.dart'; // Importation de la classe DbHelper
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // Importation du backend FFI pour SQLite
+import 'db_helper.dart'; // Votre helper pour SQLite
+
+void main() {
+  // Initialisation de la databaseFactory avec FFI
+  databaseFactory = databaseFactoryFfi;
+  
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Dclic Pay',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: HomePage(),
+    );
+  }
+}
 
 class HomePage extends StatefulWidget {
   @override
@@ -17,15 +39,16 @@ class _HomePageState extends State<HomePage> {
     _loadTransactions();
   }
 
+  // Méthode pour récupérer les transactions depuis SQLite
   Future<void> _loadTransactions() async {
-    final data =
-        await DbHelper.getTransactions(); // Récupération des transactions depuis SQLite
-    print("-----------------data");
-    print(data);
-    print(DbHelper);
+    final data = await DbHelper.getTransactions(); // Appel de la méthode getTransactions de DbHelper
+    print("--------------- Data récupérée ---------------");
+    print(data); // Affichez les données pour vérifier leur structure
+    if (data.isEmpty) {
+      print("Aucune transaction trouvée");
+    }
     setState(() {
       transactions = data;
-      print(transactions);
     });
   }
 
@@ -61,6 +84,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Column(
         children: [
+          // Carte avec informations de compte
           Card(
             elevation: 15,
             color: Colors.blue,
@@ -84,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 30),
                   Center(
                     child: Text(
-                      "\$10000.00",
+                      "\$10000.00", // Solde du compte
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -92,7 +116,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                  SizedBox(),
+                  SizedBox(height: 5),
                   Center(
                     child: Text(
                       "Total balance",
@@ -122,17 +146,16 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           SizedBox(height: 25),
-           Padding(
+          Padding(
             padding: EdgeInsets.all(20),
             child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Features",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
-              Text("See all",style: TextStyle(fontSize: 15,fontWeight: FontWeight.w300),)
-            ],
-          ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Features", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text("See all", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300)),
+              ],
             ),
-          
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -140,7 +163,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => SendPage()),
+                    MaterialPageRoute(builder: (context) => SendPage()), // Navigation vers la page d'envoi
                   );
                 },
                 child: Text("Send"),
@@ -148,25 +171,27 @@ class _HomePageState extends State<HomePage> {
               ElevatedButton(onPressed: () {}, child: Text("Receive")),
             ],
           ),
+          // Liste des transactions
           Expanded(
-            child: ListView.builder(
-              itemCount: transactions.length,
-              itemBuilder: (context, index) {
-                final transaction = transactions[index];
-                return ListTile(
-                  leading: CircleAvatar(child: Text(transaction['name'][0])),
-                  title: Text(transaction['name']),
-                  subtitle: Text(transaction['date']),
-                  trailing: Text(
-                    "${transaction['amount'] > 0 ? '+' : ''}\$${transaction['amount'].toStringAsFixed(2)}",
-                    style: TextStyle(
-                      color:
-                          transaction['amount'] > 0 ? Colors.green : Colors.red,
-                    ),
+            child: transactions.isEmpty
+                ? Center(child: Text("Aucune transaction à afficher"))
+                : ListView.builder(
+                    itemCount: transactions.length, // Nombre d'éléments dans la liste
+                    itemBuilder: (context, index) {
+                      final transaction = transactions[index];
+                      return ListTile(
+                        leading: CircleAvatar(child: Text(transaction['name'][0])), // Première lettre du nom
+                        title: Text(transaction['name']),
+                        subtitle: Text(transaction['date']),
+                        trailing: Text(
+                          "${transaction['amount'] > 0 ? '+' : ''}\$${transaction['amount'].toStringAsFixed(2)}", // Affichage du montant
+                          style: TextStyle(
+                            color: transaction['amount'] > 0 ? Colors.green : Colors.red, // Couleur selon montant
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

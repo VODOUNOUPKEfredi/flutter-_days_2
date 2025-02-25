@@ -1,134 +1,93 @@
-import 'dart:core';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqlite_api.dart';
-import 'package:dclic_pay/user.dart';
 
+// Classe DbHelper
 class DbHelper {
   static Database? _database;
 
-  // ✅ Initialisation de la base de données
-  static Future<Database> getDatabase() async {
-    _database ??= await _initDatabase();
+  // Méthode pour obtenir la base de données
+  static Future<Database> get database async {
+    if (_database != null) {
+      return _database!;
+    }
+    _database = await initDb();
     return _database!;
   }
 
-  //  Configuration et création de la base de données
-  static Future<Database> _initDatabase() async {
-    sqfliteFfiInit(); //  Initialise l'environnement FFI
-    databaseFactory = databaseFactoryFfi; //  Active la factory pour SQLite FFI
+  // Initialisation de la base de données
+  static Future<Database> initDb() async {
+    String path = join(await getDatabasesPath(), 'app.db');
+    return await openDatabase(path, version: 1, onCreate: (db, version) async {
+      // Création des tables
+      await db.execute('''
+      CREATE TABLE transactions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nomEnvoyeur TEXT,
+        montant REAL,
+        date TEXT
+      )
+      ''');
 
-    String path = join(await getDatabasesPath(), 'dclic_pay.db');
-    return await databaseFactory.openDatabase(path, options: OpenDatabaseOptions(
-      version: 1,
-      onCreate: (db, version) async {
-        // Création de la table USERS
-        await db.execute('''
-          CREATE TABLE users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            name TEXT UNIQUE,
-            email TEXT UNIQUE,
-            balance REAL DEFAULT 1000
-          )
-        ''');
+      await db.execute('''
+      CREATE TABLE solde(
+        id INTEGER PRIMARY KEY,
+        solde REAL
+      )
+      ''');
 
-        // Création de la table TRANSACTIONS
-        await db.execute('''
-          CREATE TABLE transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sender_id INTEGER,
-            recipient_id INTEGER,
-            amount REAL,
-            date TEXT,
-            is_sender INTEGER CHECK (is_sender IN (0,1)),
-            FOREIGN KEY (sender_id) REFERENCES users(id),
-            FOREIGN KEY (recipient_id) REFERENCES users(id)
-          )
-        ''');
-      },
-    ));
-  }
-
-  //  Ajouter un utilisateur
-  static Future<int> insertUser(String name, String email, double balance) async {
-    final db = await getDatabase();
-    return await db.insert('users', {
-      "name": name,
-      "email": email,
-      "balance": balance,
+      // Table pour les utilisateurs
+      await db.execute('''
+      CREATE TABLE users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE,
+        motdepasse TEXT
+      )
+      ''');
     });
   }
 
-  // Obtenir tous les utilisateurs
-  static Future<List<Map<String, dynamic>>> getUsers() async {
-    final db = await getDatabase();
-    return await db.query('users');
+  // Insertion d'un utilisateur
+  static Future<int> insertUser(String email, String motdepasse, double d) async {
+    final db = await database;
+    var result = await db.insert(
+      'users',
+      {
+        'email': email,
+        'motdepasse': motdepasse,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace, // Remplacer si l'email existe déjà
+    );
+    return result;
   }
 
-  //  Obtenir un utilisateur par email
-  static Future<User?> getUserByEmail(String email) async {
-    final db = await getDatabase();
-    List<Map<String, dynamic>> result = await db.query(
+  // Récupérer un utilisateur par email
+  static Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+    final db = await database;
+    var result = await db.query(
       'users',
       where: 'email = ?',
       whereArgs: [email],
     );
     if (result.isNotEmpty) {
-      return User.fromMap(result.first);
+      return result.first;
     }
-    return null;
+    return null; // Aucun utilisateur trouvé
   }
 
-  //  Ajouter une transaction
-  static Future<void> insertTransaction(int senderId, int recipientId, double amount) async {
-    final db = await getDatabase();
-    String currentDate = DateTime.now().toIso8601String();
-
-    // Transaction pour l'expéditeur
-    await db.insert('transactions', {
-      "sender_id": senderId,
-      "recipient_id": recipientId,
-      "amount": amount,
-      "date": currentDate,
-      "is_sender": 1,
-    });
-
-    // Transaction pour le destinataire
-    await db.insert('transactions', {
-      "sender_id": senderId,
-      "recipient_id": recipientId,
-      "amount": amount,
-      "date": currentDate,
-      "is_sender": 0,
-    });
-
-    // Mettre à jour le solde de l'expéditeur
-    await db.rawUpdate("UPDATE users SET balance = balance - ? WHERE id = ?", [amount, senderId]);
-
-    // Mettre à jour le solde du destinataire
-    await db.rawUpdate("UPDATE users SET balance = balance + ? WHERE id = ?", [amount, recipientId]);
-  }
-
-  //  Obtenir toutes les transactions
+  // Méthode statique pour récupérer les transactions
   static Future<List<Map<String, dynamic>>> getTransactions() async {
-    final db = await getDatabase();
-    return await db.query('transactions', orderBy: "date DESC");
+    final db = await database;
+    return await db.query('transactions');
   }
 
-  //  Obtenir le solde d'un utilisateur
-  static Future<double> getUserBalance(int userId) async {
-    final db = await getDatabase();
-    List<Map<String, dynamic>> result = await db.query(
-      "users",
-      columns: ["balance"],
-      where: "id = ?",
-      whereArgs: [userId],
-    );
+  // Méthode statique pour récupérer le solde
+  static Future<double> getSolde() async {
+    final db = await database;
+    var result = await db.query('solde');
     if (result.isNotEmpty) {
-      return result.first["balance"] as double;
+      return result.first['solde'] as double;
+    } else {
+      return 0.0;
     }
-    return 0.0;
   }
-
-  //static getTransaction() {}
 }
